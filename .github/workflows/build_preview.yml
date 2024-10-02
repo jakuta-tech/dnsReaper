@@ -9,12 +9,29 @@ on:
       - reopened
 
 jobs:
-  build_linux:
+  pytest:
+    strategy:
+      max-parallel: 1
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     runs-on: ubuntu-latest
-    steps: 
+    steps:
+      - uses: actions/checkout@v2
+      - name: Python runtime test
+        uses: ./.github/actions/pytest
+        with:
+          python-version: ${{ matrix.python-version }}
+  buildx:
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: install test dependencies
-        run:  sudo pip install -r test-requirements.txt
-      - name: run pytest
-        run: sudo python -m pytest -v
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and push
+        uses: docker/bake-action@v5
+        env:
+          VERSION: ${{ github.run_id }}
+        with:
+          targets: "preview"

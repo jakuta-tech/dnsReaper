@@ -81,7 +81,9 @@ def validate_args(aws_access_key_id, aws_access_key_secret):
         )
 
 
-def fetch_domains(aws_access_key_id=None, aws_access_key_secret=None, **args):
+def fetch_domains(
+    aws_access_key_id=None, aws_access_key_secret=None, aws_session_token=None, **args
+):
     validate_args(aws_access_key_id, aws_access_key_secret)
     domains = []
 
@@ -89,6 +91,7 @@ def fetch_domains(aws_access_key_id=None, aws_access_key_secret=None, **args):
         "sts",
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_access_key_secret,
+        aws_session_token=aws_session_token,
     )
 
     try:
@@ -108,10 +111,15 @@ authentication methods
         "route53",
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_access_key_secret,
+        aws_session_token=aws_session_token,
     )
     zones = get_zones(client)
     for zone in zones:
-        records = get_records(client, zone["Id"].replace("/hostedzone/", ""))
+        try:
+            records = get_records(client, zone["Id"].replace("/hostedzone/", ""))
+        except:
+            logging.warning(f"Could not retrieve records for aws zone '{zone['Name']}'")
+            records = []
         logging.debug(f"Got {len(records)} records for aws zone '{zone['Name']}'")
         for domain in convert_records_to_domains(records):
             domains.append(domain)

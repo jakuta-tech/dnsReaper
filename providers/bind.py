@@ -22,7 +22,7 @@ def bind_file_to_domains(bind_zone_file):
                 domain.AAAA = [str(r) for r in record.items]
             if record.rdtype == dns.rdatatype.CNAME:
                 domain.CNAME = [str(r) for r in record.items]
-            if record.rdtype == dns.rdatatype.NS and name != "@":
+            if record.rdtype == dns.rdatatype.NS and str(name) != "@":
                 domain.NS = [str(r) for r in record.items]
         domains.append(domain)
         logging.info(f"Read {len(domains)} domains from zonefile '{bind_zone_file}'")
@@ -32,7 +32,7 @@ def bind_file_to_domains(bind_zone_file):
 def fetch_domains(bind_zone_file, **args):
     if isfile(bind_zone_file):
         domains = bind_file_to_domains(bind_zone_file)
-        logging.warn(f"Read {len(domains)} domains from zone file")
+        logging.warning(f"Read {len(domains)} domains from zone file")
     else:
         domains = []
         files = [
@@ -43,5 +43,5 @@ def fetch_domains(bind_zone_file, **args):
         for file in files:
             logging.debug("Reading file '{file}'")
             domains = [*domains, *bind_file_to_domains(file)]
-        logging.warn(f"Read {len(domains)} domains from zone file dir")
+        logging.warning(f"Read {len(domains)} domains from zone file dir")
     return domains
